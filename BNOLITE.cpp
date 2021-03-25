@@ -15,8 +15,8 @@
 #define ACC_DATA 0x08 //Start of the 6 registers that returns accelerometer data
 #define UNIT_SEL 0x3B // Unit Selection register
 
-// almost everything here is from cameronw2002's BNO055 sketch on github
-// which is almost definatley faster than this library
+// a lot of the code here is from cameronw2002's BNO055 sketch on github
+// which is almost definatley goiong to be faster than this library
 // but i would like to beleive that this lib will be easier to use
 
 // cameronw2002's sketch can be found here:
