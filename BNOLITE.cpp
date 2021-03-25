@@ -32,7 +32,7 @@
 // to enter debug mode (use the serial monitor to print data values that would normally be hidden) just uncomment / comment the 2 lines below
 
 // #define DEBUG false
-// #define DEBUG true
+#define DEBUG true
 
 // units of measurement used by the sensor
 
@@ -93,6 +93,29 @@ byte ACCEL_OPMODE = 0b00000000; // normal
 // byte ACCEL_OPMODE = 0b00000100; // low power 2
 // byte ACCEL_OPMODE = 0b00000101; // deep suspend
 
+// ----------------------------------------------
+// these are the magnetometer settings, depending on what you are doing you might want to change these
+
+// byte MAG_BANDWIDTH = 0b00000000; // 2HZ
+// byte MAG_BANDWIDTH = 0b00000001; // 6HZ   
+// byte MAG_BANDWIDTH = 0b00000010; // 8HZ
+// byte MAG_BANDWIDTH = 0b00000011; // 10HZ
+// byte MAG_BANDWIDTH = 0b00000100; // 15HZ
+// byte MAG_BANDWIDTH = 0b00000101; // 20HZ
+// byte MAG_BANDWIDTH = 0b00000110; // 25HZ
+byte MAG_BANDWIDTH = 0b00000111; // 30HZ
+
+// byte MAG_OPMODE = 0b00000000; // low power
+byte MAG_OPMODE = 0b00000001; // regular
+// byte MAG_OPMODE = 0b00000010; // enhanced regular
+// byte MAG_OPMODE = 0b00000011; // high accuracy
+
+byte MAG_PMODE = 0b00000000; // normal
+// byte MAG_PMODE = 0b00000001; // sleep
+// byte MAG_PMODE = 0b00000010; // suspend
+// byte MAG_PMODE = 0b00000011; // force mode
+
+
 // ---------------------------------------------
 // --       dont edit after this point        --
 // --                                         --
@@ -100,8 +123,11 @@ byte ACCEL_OPMODE = 0b00000000; // normal
 
 byte gyro_config_0 = 0b00000000;
 byte accel_config_0 = 0b00000000;
+byte mag_config_0 = 0b00000000;
 
 float total_x, total_y, total_z, offset_x, offset_y, offset_z;
+
+bool use_debias = true;
 
 BNOLITE::BNOLITE()
 {
@@ -136,6 +162,14 @@ BNOLITE::BNOLITE()
     bitWrite(accel_config_0, 1, bitRead(ACCEL_G_RANGE, 1));
     bitWrite(accel_config_0, 0, bitRead(ACCEL_G_RANGE, 0));
 
+    bitWrite(mag_config_0, 7, 0); // unused bit
+    bitWrite(mag_config_0, 6, bitRead(MAG_PMODE, 1));
+    bitWrite(mag_config_0, 5, bitRead(MAG_PMODE, 0));
+    bitWrite(mag_config_0, 4, bitRead(MAG_OPMODE, 1));
+    bitWrite(mag_config_0, 3, bitRead(MAG_OPMODE, 0));
+    bitWrite(mag_config_0, 2, bitRead(MAG_BANDWIDTH, 2));
+    bitWrite(mag_config_0, 1, bitRead(MAG_BANDWIDTH, 1));
+    bitWrite(mag_config_0, 0, bitRead(MAG_BANDWIDTH, 0));
 
     #ifdef DEBUG
         Serial.println();
@@ -193,9 +227,27 @@ BNOLITE::BNOLITE()
 
         Serial.println();
         Serial.println();
-    #endif
-    
 
+        Serial.println("mag_config_0 (magnetometer bandwidth, power mode, and operating mode): ");
+        Serial.println();
+        Serial.println("     unused power mode");
+        Serial.println("        ~~~ ~~");
+        Serial.print("syntax: 0b0 ");
+        Serial.print(bitRead(mag_config_0, 6));
+        Serial.print(bitRead(mag_config_0, 5));
+        Serial.print(" ");
+        Serial.print(bitRead(mag_config_0, 4));
+        Serial.print(bitRead(mag_config_0, 3));
+        Serial.print(" ");
+        Serial.print(bitRead(mag_config_0, 2));
+        Serial.print(bitRead(mag_config_0, 1));
+        Serial.println(bitRead(mag_config_0, 0));
+        Serial.println("               ~~ ~~~");
+        Serial.println("   operating mode bandwidth");
+
+        Serial.println();
+        Serial.println();
+    #endif
 };
 
 void BNOLITE::write(int reg, int data) {
@@ -238,17 +290,22 @@ void BNOLITE::read_gyro() {
     Wire.requestFrom(ADDR, 6, true);
     
     #ifdef RAD
-        gyro.x = ((int16_t)(Wire.read()|Wire.read()<<8) / 900.0 + offset_x);
-        gyro.y = ((int16_t)(Wire.read()|Wire.read()<<8) / 900.0 + offset_y);
-        gyro.z = ((int16_t)(Wire.read()|Wire.read()<<8) / 900.0 + offset_z); 
+        gyro.x = (int16_t)(Wire.read()|Wire.read()<<8) / 900.0;
+        gyro.y = (int16_t)(Wire.read()|Wire.read()<<8) / 900.0;
+        gyro.z = (int16_t)(Wire.read()|Wire.read()<<8) / 900.0; 
     #endif
 
     #ifndef RAD
-        gyro.x = ((int16_t)(Wire.read()|Wire.read()<<8) / 16.0) + offset_x;
-        gyro.y = ((int16_t)(Wire.read()|Wire.read()<<8) / 16.0) + offset_y;
-        gyro.z = ((int16_t)(Wire.read()|Wire.read()<<8) / 16.0) + offset_z; 
+        gyro.x = (int16_t)(Wire.read()|Wire.read()<<8) / 16.0;
+        gyro.y = (int16_t)(Wire.read()|Wire.read()<<8) / 16.0;
+        gyro.z = (int16_t)(Wire.read()|Wire.read()<<8) / 16.0; 
     #endif
     
+    if (use_debias) {
+        gyro.x += offset_x;
+        gyro.y += offset_y;
+        gyro.z += offset_z;
+    }
 };
 
 void BNOLITE::read_accel() {
@@ -262,9 +319,30 @@ void BNOLITE::read_accel() {
     accel.z = (int16_t)(Wire.read()|Wire.read()<<8) / 100.0;
 };
 
+void BNOLITE::read_mag() {
+    Wire.beginTransmission(ADDR);
+    Wire.write(MAG_DATA);
+    Wire.endTransmission(false);
+    Wire.requestFrom(ADDR, 6, true);
+
+    mag.y = (int16_t)(Wire.read()|Wire.read()<<8) / 16.0;
+    mag.x = (int16_t)(Wire.read()|Wire.read()<<8) / 16.0;
+    mag.z = (int16_t)(Wire.read()|Wire.read()<<8) / 16.0;
+}
+
 void BNOLITE::debias(int sample_count) {
 
+    // this works by averaging the noise from the gyroscope by reading it x ammount of times, and averaging the sum of the samples by x
+    // MAKE SURE THE GYROSCOPE IS NOT MOVING WHEN YOU RUN THIS FUNCTION - IF YOU DONT YOUR GYROSCOPIC VALUES WILL BE VERY WRONG
+    // if you accidentally move the gyroscope when running this function you can use the disable_debias function, or run the debias function again to retry
+
+    use_debias = true;
+
     int samples;
+    
+    total_x = 0.0;
+    total_y = 0.0;
+    total_z = 0.0;
 
     for (samples = 0; samples < sample_count; samples ++) {
         read_gyro();
@@ -273,6 +351,7 @@ void BNOLITE::debias(int sample_count) {
         total_z += gyro.z;
         delayMicroseconds((1 / gSpeed) * 1000000);
     }   
+
     offset_x = total_x / sample_count;
     offset_y = total_y / sample_count;
     offset_z = total_z / sample_count;
@@ -297,4 +376,12 @@ void BNOLITE::debias(int sample_count) {
         Serial.print("Z: ");
         Serial.println(offset_z);
     #endif
+}
+
+void BNOLITE::disable_debias() {
+    use_debias = false;
+}
+
+void BNOLITE::enable_debias() {
+    use_debias = true;
 }
