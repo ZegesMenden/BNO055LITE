@@ -146,7 +146,7 @@ bool BNOLITE::initialize() {
     write(GYR_Config_1, gyro_config_1);
 
     write(Page_ID, 0x00);
-    Serial.println(gyro_config_0, BIN);
+    
     return true;
 };
 
