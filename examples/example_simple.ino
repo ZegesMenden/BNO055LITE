@@ -4,6 +4,8 @@
 BNOLITE bno = BNOLITE();
 
 // code written by ZegesMenden
+// data is procured from the sensor by using the read_gyro() and read_accel() functions
+// the gyro and accel data is then stored in bno.accel.x / y / z or in bno.gyro.x / y / z for easy access
 
 void setup() {
   Serial.begin(9600);
