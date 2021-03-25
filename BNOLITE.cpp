@@ -28,6 +28,18 @@
 // ---------------------------------------------
 
 // ----------------------------------------------
+
+// to enter debug mode (use the serial monitor to print data values that would normally be hidden) just uncomment / comment the 2 lines below
+
+// #define DEBUG false
+// #define DEBUG true
+
+// units of measurement used by the sensor
+
+// to use degrees per second comment the line below, to use radians per second uncomment the line below
+// #define RAD true
+
+// ----------------------------------------------
 // these are the gyroscope settings, depending on what youre doing you might want to change these, the current setting is 2000dps max and 523HZ bandwidth
 
 // GYRO_RANGE is the range of the gyroscope in dps
@@ -40,14 +52,14 @@ byte GYRO_RANGE = 0b00000000; // 2000dps
 
 // GYRO_BANDWIDTH is the rate at which gyroscopic data will be recorded in HZ
 
-// byte GYRO_BANDWIDTH  = 0b00000101; // 12HZ
-// byte GYRO_BANDWIDTH  = 0b00000100; // 23HZ
-// byte GYRO_BANDWIDTH  = 0b00000111; // 32HZ
-// byte GYRO_BANDWIDTH  = 0b00000011; // 47HZ
-// byte GYRO_BANDWIDTH  = 0b00000110; // 64HZ
-// byte GYRO_BANDWIDTH  = 0b00000010; // 116HZ
-// byte GYRO_BANDWIDTH  = 0b00000001; // 230HZ
-byte GYRO_BANDWIDTH  = 0b00000000; // 523HZ
+// byte GYRO_BANDWIDTH  = 0b00000101; byte gSpeed = 12;// 12HZ
+// byte GYRO_BANDWIDTH  = 0b00000100; byte gSpeed = 23;// 23HZ
+// byte GYRO_BANDWIDTH  = 0b00000111; byte gSpeed = 32;// 32HZ
+// byte GYRO_BANDWIDTH  = 0b00000011; byte gSpeed = 47;// 47HZ
+// byte GYRO_BANDWIDTH  = 0b00000110; byte gSpeed = 64;// 64HZ
+// byte GYRO_BANDWIDTH  = 0b00000010; byte gSpeed = 116;// 116HZ
+// byte GYRO_BANDWIDTH  = 0b00000001; byte gSpeed = 230;// 230HZ
+byte GYRO_BANDWIDTH  = 0b00000000; byte gSpeed = 523;// 523HZ
 
 // you probably dont want to change these because it can mess with your range and bandwidth settings, so edit with caution
 byte gyro_config_1 = 0b00000000; // normal
@@ -89,10 +101,21 @@ byte ACCEL_OPMODE = 0b00000000; // normal
 byte gyro_config_0 = 0b00000000;
 byte accel_config_0 = 0b00000000;
 
+float total_x, total_y, total_z, offset_x, offset_y, offset_z;
+
 BNOLITE::BNOLITE()
 {
     Wire.begin();
 
+    #ifdef DEBUG
+        if (!Serial) {
+            Serial.begin(11250);
+        }
+
+        while (!Serial);
+
+        Serial.println("BNOLITE has entered debug mode");
+    #endif
     // this is the code for changing the byte value of gyro_config_0 (gyroscope bandwidth and sensing range) to the preferred user settings based on what was commented / uncommented above
     bitWrite(gyro_config_0, 7, 0); // bit 0 (assuming the left most bit is bit 0) is always 0, regardless of the configuration that you use
     bitWrite(gyro_config_0, 6, 0); // same with bit 1
@@ -103,8 +126,6 @@ BNOLITE::BNOLITE()
     bitWrite(gyro_config_0, 1, bitRead(GYRO_RANGE, 1));
     bitWrite(gyro_config_0, 0, bitRead(GYRO_RANGE, 0));
 
-
-
     // this is the code for changing the byte value of accel_config_0 (accelerometer bandwidth, G range, and operating mode) to the preferred user settings based on what was commented / uncommented above
     bitWrite(accel_config_0, 7, bitRead(ACCEL_OPMODE, 2));
     bitWrite(accel_config_0, 6, bitRead(ACCEL_OPMODE, 1));
@@ -114,6 +135,66 @@ BNOLITE::BNOLITE()
     bitWrite(accel_config_0, 2, bitRead(ACCEL_BANDWIDTH, 0));
     bitWrite(accel_config_0, 1, bitRead(ACCEL_G_RANGE, 1));
     bitWrite(accel_config_0, 0, bitRead(ACCEL_G_RANGE, 0));
+
+
+    #ifdef DEBUG
+        Serial.println();
+        Serial.println();
+
+        Serial.println("gyro_config_0 (gyroscope bandwidth & dps range): ");
+        Serial.println();
+        Serial.println("       unused");
+        Serial.println("        ~~~~");
+        Serial.print("syntax: 0b00 ");
+        Serial.print(bitRead(gyro_config_0, 5));
+        Serial.print(bitRead(gyro_config_0, 4));
+        Serial.print(bitRead(gyro_config_0, 3));
+        Serial.print(" ");
+        Serial.print(bitRead(gyro_config_0, 2));
+        Serial.print(bitRead(gyro_config_0, 1));
+        Serial.println(bitRead(gyro_config_0, 0));
+        Serial.println("             ~~~ ~~~");
+        Serial.println("       bandwidth range(dps)");
+
+        Serial.println();
+        Serial.println();
+
+        Serial.println("gyro_config_1 (gyroscope operating mode): ");
+        Serial.println();
+        Serial.println("        unused");
+        Serial.println("        ~~~~~~~");
+        Serial.print("syntax: 0b00000 ");
+        Serial.print(bitRead(gyro_config_1, 2));
+        Serial.print(bitRead(gyro_config_1, 1));
+        Serial.println(bitRead(gyro_config_1, 0));
+        Serial.println("                ~~~");
+        Serial.println("          operating mode");
+
+        Serial.println();
+        Serial.println();
+
+        Serial.println("accel_config_0 (accelerometer bandwidth, operating mode, and G range): ");
+        Serial.println();
+        Serial.println("      operating mode");
+        Serial.println("           ~~~");
+        Serial.print("syntax: 0b ");
+        Serial.print(bitRead(accel_config_0, 7));
+        Serial.print(bitRead(accel_config_0, 6));
+        Serial.print(bitRead(accel_config_0, 5));
+        Serial.print(" ");
+        Serial.print(bitRead(accel_config_0, 4));
+        Serial.print(bitRead(accel_config_0, 3));
+        Serial.print(bitRead(accel_config_0, 2));
+        Serial.print(" ");
+        Serial.print(bitRead(accel_config_0, 1));
+        Serial.println(bitRead(accel_config_0, 0));
+        Serial.println("               ~~~ ~~");
+        Serial.println("         bandwidth G range");
+
+        Serial.println();
+        Serial.println();
+    #endif
+    
 
 };
 
@@ -156,9 +237,18 @@ void BNOLITE::read_gyro() {
     Wire.endTransmission(false);
     Wire.requestFrom(ADDR, 6, true);
     
-    gyro.x = (int16_t)(Wire.read()|Wire.read()<<8) / 16.0;
-    gyro.y = (int16_t)(Wire.read()|Wire.read()<<8) / 16.0;
-    gyro.z = (int16_t)(Wire.read()|Wire.read()<<8) / 16.0; 
+    #ifdef RAD
+        gyro.x = ((int16_t)(Wire.read()|Wire.read()<<8) / 900.0 + offset_x);
+        gyro.y = ((int16_t)(Wire.read()|Wire.read()<<8) / 900.0 + offset_y);
+        gyro.z = ((int16_t)(Wire.read()|Wire.read()<<8) / 900.0 + offset_z); 
+    #endif
+
+    #ifndef RAD
+        gyro.x = ((int16_t)(Wire.read()|Wire.read()<<8) / 16.0) + offset_x;
+        gyro.y = ((int16_t)(Wire.read()|Wire.read()<<8) / 16.0) + offset_y;
+        gyro.z = ((int16_t)(Wire.read()|Wire.read()<<8) / 16.0) + offset_z; 
+    #endif
+    
 };
 
 void BNOLITE::read_accel() {
@@ -171,3 +261,40 @@ void BNOLITE::read_accel() {
     accel.x = (int16_t)(Wire.read()|Wire.read()<<8) / 100.0;
     accel.z = (int16_t)(Wire.read()|Wire.read()<<8) / 100.0;
 };
+
+void BNOLITE::debias(int sample_count) {
+
+    int samples;
+
+    for (samples = 0; samples < sample_count; samples ++) {
+        read_gyro();
+        total_x += gyro.x;
+        total_y += gyro.y;
+        total_z += gyro.z;
+        delayMicroseconds((1 / gSpeed) * 1000000);
+    }   
+    offset_x = total_x / sample_count;
+    offset_y = total_y / sample_count;
+    offset_z = total_z / sample_count;
+
+    #ifdef DEBUG
+        Serial.println("GYROSCOPE DEBIASING RESULTS:");
+        Serial.print("samples taken: ");
+        Serial.println(sample_count);
+        Serial.println();
+        Serial.println("total noise on all axes:");
+        Serial.print("X: ");
+        Serial.println(total_x);
+        Serial.print("Y: ");
+        Serial.println(total_y);
+        Serial.print("Z: ");
+        Serial.println(total_z);
+        Serial.println("averaged noise on all axes (sensor bias):");
+        Serial.print("X: ");
+        Serial.println(offset_x);
+        Serial.print("Y: ");
+        Serial.println(offset_y);
+        Serial.print("Z: ");
+        Serial.println(offset_z);
+    #endif
+}
