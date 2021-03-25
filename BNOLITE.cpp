@@ -32,7 +32,7 @@
 // to enter debug mode (use the serial monitor to print data values that would normally be hidden) just uncomment / comment the 2 lines below
 
 // #define DEBUG false
-#define DEBUG true
+// #define DEBUG true
 
 // units of measurement used by the sensor
 
