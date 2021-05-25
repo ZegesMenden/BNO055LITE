@@ -29,8 +29,6 @@ void setup() {
   
   Serial.println("BNO055 initialized!");
   
-  bno.debias(500);
-  
   T = micros();
 }
 
