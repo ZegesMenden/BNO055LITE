@@ -81,6 +81,14 @@ byte MAG_PMODE = 0b00000000; // normal
 // --                                         --
 // ---------------------------------------------
 
+byte GYRO_BANDWIDTH = 0;
+byte GYRO_RANGE = 0;
+
+byte ACCEL_BANDWIDTH = 0;
+byte ACCEL_G_RANGE = 0;
+
+byte MAG_BANDWIDTH = 0;
+
 byte gyro_config_0 = 0b00000000;
 byte accel_config_0 = 0b00000000;
 byte mag_config_0 = 0b00000000;
@@ -149,7 +157,7 @@ void BNOLITE::configure_gyro(gyroscope_bandwidth gyro_bandwidth, gyroscope_range
 
 };
 
-void BNOLITE::configure_accel(accelerometer_bandwidth accel_bandwidth, accelerometer_range, accel_range) {
+void BNOLITE::configure_accel(accelerometer_bandwidth accel_bandwidth, accelerometer_range accel_range) {
     switch(accel_bandwidth) {
         case accel_7_81HZ:
             ACCEL_BANDWIDTH = 0b00000000;
