@@ -180,11 +180,11 @@ void BNOLITE::configure_accel(accelerometer_bandwidth accel_bandwidth, accelerom
     switch(accel_range) {
         case accel_2G:
             ACCEL_G_RANGE = 0b00000000;
-        case accel_2G:
+        case accel_4G:
             ACCEL_G_RANGE = 0b00000000;
-        case accel_2G:
+        case accel_8G:
             ACCEL_G_RANGE = 0b00000000;
-        case accel_2G:
+        case accel_16G:
             ACCEL_G_RANGE = 0b00000000;
     }
 
