@@ -39,29 +39,12 @@
 // to use degrees per second comment the line below, to use radians per second uncomment the line below
 // #define RAD true
 
+// these settings below control the operation and power modes of all the sensors.
+// They're set to values that won't interfere with their use, but you can change them depending on your requirements
+
 // ----------------------------------------------
-// these are the gyroscope settings, depending on what youre doing you might want to change these, the current setting is 2000dps max and 523HZ bandwidth
+// gyroscope operation mode settings
 
-// GYRO_RANGE is the range of the gyroscope in dps
-
-// byte GYRO_RANGE = 0b00000100; // 125dps
-// byte GYRO_RANGE = 0b00000011; // 250dps
-// byte GYRO_RANGE = 0b00000010; // 500dps
-// byte GYRO_RANGE = 0b00000001; // 1000dps
-byte GYRO_RANGE = 0b00000000; // 2000dps
-
-// GYRO_BANDWIDTH is the rate at which gyroscopic data will be recorded in HZ
-
-// byte GYRO_BANDWIDTH  = 0b00000101; byte gSpeed = 12;// 12HZ
-// byte GYRO_BANDWIDTH  = 0b00000100; byte gSpeed = 23;// 23HZ
-// byte GYRO_BANDWIDTH  = 0b00000111; byte gSpeed = 32;// 32HZ
-// byte GYRO_BANDWIDTH  = 0b00000011; byte gSpeed = 47;// 47HZ
-// byte GYRO_BANDWIDTH  = 0b00000110; byte gSpeed = 64;// 64HZ
-// byte GYRO_BANDWIDTH  = 0b00000010; byte gSpeed = 116;// 116HZ
-// byte GYRO_BANDWIDTH  = 0b00000001; byte gSpeed = 230;// 230HZ
-byte GYRO_BANDWIDTH  = 0b00000000; byte gSpeed = 523;// 523HZ
-
-// you probably dont want to change these because it can mess with your range and bandwidth settings, so edit with caution
 byte gyro_config_1 = 0b00000000; // normal
 // byte gyro_config_1 = 0b00000001; // fast power up
 // byte gyro_config_1 = 0b00000010; // deep suspend
@@ -70,21 +53,7 @@ byte gyro_config_1 = 0b00000000; // normal
 
 
 // ----------------------------------------------
-// these are the accelerometer settings, depending on what you are doing you might want to change these, the current setting is 16G range, and 500HZ bandwidth
-
-// byte ACCEL_G_RANGE = 0b00000000; // 2G
-// byte ACCEL_G_RANGE = 0b00000001; // 4G
-// byte ACCEL_G_RANGE = 0b00000010; // 8G
-byte ACCEL_G_RANGE = 0b00000011; // 16G
-
-// byte ACCEL_BANDWIDTH = 0b00000000; // 7.81HZ
-// byte ACCEL_BANDWIDTH = 0b00000001; // 15.63HZ
-// byte ACCEL_BANDWIDTH = 0b00000010; // 31.25HZ
-// byte ACCEL_BANDWIDTH = 0b00000011; // 62.5HZ
-// byte ACCEL_BANDWIDTH = 0b00000100; // 125HZ
-// byte ACCEL_BANDWIDTH = 0b00000101; // 250HZ
-byte ACCEL_BANDWIDTH = 0b00000110; // 500HZ
-// byte ACCEL_BANDWIDTH = 0b00000111; // 1000HZ
+// accelerometer operation mode settings
 
 byte ACCEL_OPMODE = 0b00000000; // normal
 // byte ACCEL_OPMODE = 0b00000001; // suspend
@@ -94,16 +63,7 @@ byte ACCEL_OPMODE = 0b00000000; // normal
 // byte ACCEL_OPMODE = 0b00000101; // deep suspend
 
 // ----------------------------------------------
-// these are the magnetometer settings, depending on what you are doing you might want to change these
-
-// byte MAG_BANDWIDTH = 0b00000000; // 2HZ
-// byte MAG_BANDWIDTH = 0b00000001; // 6HZ   
-// byte MAG_BANDWIDTH = 0b00000010; // 8HZ
-// byte MAG_BANDWIDTH = 0b00000011; // 10HZ
-// byte MAG_BANDWIDTH = 0b00000100; // 15HZ
-// byte MAG_BANDWIDTH = 0b00000101; // 20HZ
-// byte MAG_BANDWIDTH = 0b00000110; // 25HZ
-byte MAG_BANDWIDTH = 0b00000111; // 30HZ
+// magnetometer power and operation mode settings
 
 // byte MAG_OPMODE = 0b00000000; // low power
 byte MAG_OPMODE = 0b00000001; // regular
@@ -142,6 +102,41 @@ BNOLITE::BNOLITE()
 
         Serial.println("BNOLITE has entered debug mode");
     #endif
+};
+
+void BNOLITE::configure_gyro(gyroscope_bandwidth gyro_bandwidth, gyroscope_range gyro_range) {
+    switch(gyro_bandwidth) {
+        case gyro_12HZ:
+            GYRO_BANDWIDTH  = 0b00000101;
+        case gyro_23HZ:
+            GYRO_BANDWIDTH  = 0b00000100;
+        case gyro_32HZ:
+            GYRO_BANDWIDTH  = 0b00000111;
+        case gyro_47HZ:
+            GYRO_BANDWIDTH  = 0b00000011;
+        case gyro_64HZ:
+            GYRO_BANDWIDTH  = 0b00000110;
+        case gyro_116HZ:
+            GYRO_BANDWIDTH  = 0b00000010;
+        case gyro_230HZ:
+            GYRO_BANDWIDTH  = 0b00000001;
+        case gyro_523HZ:
+            GYRO_BANDWIDTH  = 0b00000000;
+    }
+
+    switch(gyro_range) {
+        case gyro_125dps:
+            GYRO_RANGE = 0b00000100;
+        case gyro_250dps:
+            GYRO_RANGE = 0b00000011;
+        case gyro_500dps:
+            GYRO_RANGE = 0b00000010;
+        case gyro_1000dps:
+            GYRO_RANGE = 0b00000001;
+        case gyro_2000dps:
+            GYRO_RANGE = 0b00000000;
+    }
+
     // this is the code for changing the byte value of gyro_config_0 (gyroscope bandwidth and sensing range) to the preferred user settings based on what was commented / uncommented above
     bitWrite(gyro_config_0, 7, 0); // bit 0 (assuming the left most bit is bit 0) is always 0, regardless of the configuration that you use
     bitWrite(gyro_config_0, 6, 0); // same with bit 1
@@ -152,6 +147,39 @@ BNOLITE::BNOLITE()
     bitWrite(gyro_config_0, 1, bitRead(GYRO_RANGE, 1));
     bitWrite(gyro_config_0, 0, bitRead(GYRO_RANGE, 0));
 
+};
+
+void BNOLITE::configure_accel(accelerometer_bandwidth accel_bandwidth, accelerometer_range, accel_range) {
+    switch(accel_bandwidth) {
+        case accel_7_81HZ:
+            ACCEL_BANDWIDTH = 0b00000000;
+        case accel_15_63HZ:
+            ACCEL_BANDWIDTH = 0b00000001;
+        case accel_31_25HZ:
+            ACCEL_BANDWIDTH = 0b00000010;
+        case accel_62_5HZ:
+            ACCEL_BANDWIDTH = 0b00000011;
+        case accel_125HZ:
+            ACCEL_BANDWIDTH = 0b00000100;
+        case accel_250HZ:
+            ACCEL_BANDWIDTH = 0b00000101;
+        case accel_500HZ:
+            ACCEL_BANDWIDTH = 0b00000110;
+        case accel_1000HZ:
+            ACCEL_BANDWIDTH = 0b00000111;        
+    }
+
+    switch(accel_range) {
+        case accel_2G:
+            ACCEL_G_RANGE = 0b00000000;
+        case accel_2G:
+            ACCEL_G_RANGE = 0b00000000;
+        case accel_2G:
+            ACCEL_G_RANGE = 0b00000000;
+        case accel_2G:
+            ACCEL_G_RANGE = 0b00000000;
+    }
+
     // this is the code for changing the byte value of accel_config_0 (accelerometer bandwidth, G range, and operating mode) to the preferred user settings based on what was commented / uncommented above
     bitWrite(accel_config_0, 7, bitRead(ACCEL_OPMODE, 2));
     bitWrite(accel_config_0, 6, bitRead(ACCEL_OPMODE, 1));
@@ -161,6 +189,27 @@ BNOLITE::BNOLITE()
     bitWrite(accel_config_0, 2, bitRead(ACCEL_BANDWIDTH, 0));
     bitWrite(accel_config_0, 1, bitRead(ACCEL_G_RANGE, 1));
     bitWrite(accel_config_0, 0, bitRead(ACCEL_G_RANGE, 0));
+};
+
+void BNOLITE::configure_mag(magnetometoer_bandwidth, mag_bandwidth) {
+    switch(mag_bandwidth) {
+        case mag_2HZ:
+            MAG_BANDWIDTH = 0b00000000;
+        case mag_6HZ:
+            MAG_BANDWIDTH = 0b00000001;
+        case mag_8HZ:
+            MAG_BANDWIDTH = 0b00000010;
+        case mag_10HZ:
+            MAG_BANDWIDTH = 0b00000011;
+        case mag_15HZ:
+            MAG_BANDWIDTH = 0b00000100;
+        case mag_20HZ:
+            MAG_BANDWIDTH = 0b00000101;
+        case mag_25HZ:
+            MAG_BANDWIDTH = 0b00000110;
+        case mag_30HZ:
+            MAG_BANDWIDTH = 0b00000111;            
+    }
 
     bitWrite(mag_config_0, 7, 0); // unused bit
     bitWrite(mag_config_0, 6, bitRead(MAG_PMODE, 1));
@@ -170,6 +219,16 @@ BNOLITE::BNOLITE()
     bitWrite(mag_config_0, 2, bitRead(MAG_BANDWIDTH, 2));
     bitWrite(mag_config_0, 1, bitRead(MAG_BANDWIDTH, 1));
     bitWrite(mag_config_0, 0, bitRead(MAG_BANDWIDTH, 0));
+}
+
+void BNOLITE::write(int reg, int data) {
+    Wire.beginTransmission(ADDR);
+    Wire.write(reg);
+    Wire.write(data);
+    Wire.endTransmission(true);
+};
+
+bool BNOLITE::initialize() {
 
     #ifdef DEBUG
         Serial.println();
@@ -248,16 +307,7 @@ BNOLITE::BNOLITE()
         Serial.println();
         Serial.println();
     #endif
-};
 
-void BNOLITE::write(int reg, int data) {
-    Wire.beginTransmission(ADDR);
-    Wire.write(reg);
-    Wire.write(data);
-    Wire.endTransmission(true);
-};
-
-bool BNOLITE::initialize() {
     write(0x07, 0x00);
 
     delay(10);

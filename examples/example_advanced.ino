@@ -22,6 +22,10 @@ void setup() {
 
   Serial.println("BNO055 test!");
   
+  bno.configure_gyro(gyro_523HZ, gyro_2000dps);
+  bno.configure_accel(accel_1000HZ, accel_16G);
+  bno.configure_mag(mag_30HZ);
+
   if (! bno.initialize()) {
     Serial.println("BNO055 not found!"); // this means that your BNO0O55 is not hooked up to your microcontroller properly
     while(1); // wait forever
