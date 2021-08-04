@@ -62,7 +62,7 @@ class BNOLITE
 
     void configure_gyro(gyroscope_bandwidth gyro_bandwidth, gyroscope_range gyro_range);
     void configure_accel(accelerometer_bandwidth accel_bandwidth, accelerometer_range accel_range);
-    void configure_mag(magnetometoer_bandwidth mag_bandwidth);
+    void configure_mag(magnetometer_bandwidth mag_bandwidth);
 
     void read_gyro(); // run this to read gyroscope data. gyroscopic data will be accessible in bno.gyro. x / y / z
     void read_accel(); // run this to read accelerometer data. accelerometer data will be accessible in bno.accel. x / y / z
